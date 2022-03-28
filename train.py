@@ -5,24 +5,15 @@ from sklearn.naive_bayes import CategoricalNB
 import pickle
 
 def trainModel(path):
-    sampleList = pickle.load(open(path, "rb"))
-    sent = []
+    samples = pickle.load(open(path, "rb"))
 
-    # Vectorize feature data
-    fourLetters = [x for x, _ in sampleList]
-    labels = [y for _, y in sampleList]
-    features = list(set([y for x in fourLetters for y in x]))
+    # unpack and take feature vectors and labels
     featureData = []
-    
-    for letterTuple in fourLetters:
-        temp = []
-        for sample in features:
-            if sample in letterTuple:
-                temp.append(1)
-            else:
-                temp.append(0)
-        featureData.append(temp)
-    
+    labels = []
+    for feature, label in samples:
+        featureData.append(feature)
+        labels.append(label)
+
     # Train categoricalNB model
     model = CategoricalNB().fit(featureData, labels)
 

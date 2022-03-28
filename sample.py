@@ -1,6 +1,8 @@
 import argparse
+from cgi import print_arguments
 import gzip
 import pickle
+from sklearn import preprocessing
 
 def getSamples(path):
     newPath = path.split('.')
@@ -16,31 +18,52 @@ def getSamples(path):
         with open(path, 'r') as file:
             for line in file:
                 line = line.strip('\n')
-                allSents.append(line)
+                allSents.append(line.lower())
     else:
         print("File format not supported!")
 
     consonantLetters = 'bcdfghjklmnpqrstvwxyz'
     vowelLetters = 'aeiou'
 
+    bigSent = " ".join(allSents)    # Combine all sentences in a long string.
     letterWithPosition = []
     span = 4
-    for s in allSents:
-        for i in range(0, len(s)):
-            fourLetters = ()
-            if len(s[i: i+span]) == 4:
-                fourLetters = s[i]+"_1", s[i+1]+"_2", s[i+2]+"_3", s[i+3]+"_4"
-            label = ''
-            for letter in s[i+span: ]:
-                if letter in consonantLetters:
-                    label = letter
-                    break
+
+    for i in range(0, len(bigSent)):
+        fourLetters = ()
+        if len(bigSent[i: i+span]) == 4:
+            fourLetters = bigSent[i]+"_1", bigSent[i+1]+"_2", bigSent[i+2]+"_3", bigSent[i+3]+"_4"
+        label = ''
+        for letter in bigSent[i+span: ]:
+            if letter in consonantLetters:
+                label = letter
+                break
+        if label != '':
             letterWithPosition.append((fourLetters, label))
-            
+
+    # Vectorize feature data
+    fourLetters = [x for x, _ in letterWithPosition]
+    labels = [y for _, y in letterWithPosition]
+    features = list(set([y for x in fourLetters for y in x]))
+    featureData = []
+    
+    # Encode labels and split train and test sets
+    encod = preprocessing.LabelEncoder()
+    encodedLabes = encod.fit_transform(labels)
+
+    for i in range(len(letterWithPosition)):
+        temp = []
+        for sample in features:
+            if sample in letterWithPosition[i]:
+                temp.append(1)
+            else:
+                temp.append(0)
+        featureData.append((temp, encodedLabes[i]))
+    
     split = int(len(letterWithPosition)*0.8)
 
-    trainSet = letterWithPosition[:split]
-    testSet = letterWithPosition[split:]
+    trainSet = featureData[:split]
+    testSet = featureData[split:]
 
     # pickle the 2 sets for furture use.
     pickle.dump(letterWithPosition, open("allSamples.p", "wb"))
