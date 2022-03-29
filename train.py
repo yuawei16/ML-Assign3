@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from sklearn.naive_bayes import CategoricalNB
+from sklearn import svm
 import pickle
 
 def trainModel(path):
@@ -14,13 +15,15 @@ def trainModel(path):
         featureData.append(feature)
         labels.append(label)
 
-    # Train categoricalNB model
+    # Train categoricalNB and SVC model and save model to pickle.
     model = CategoricalNB().fit(featureData, labels)
 
-    # Save model to pickle.
     pickle.dump(model, open("CNB.sav", 'wb'))
 
-    return print("Model saved as CNB.sav.")
+    svcModel = svm.SVC(kernel='linear', C=1, decision_function_shape='ovo').fit(featureData, labels)
+    pickle.dump(model, open("svc.sav", 'wb'))
+
+    return print("CategoricalNB Model saved as CNB.sav. SVM Model saved as svc.sav.")
 
 
 
